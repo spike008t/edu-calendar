@@ -45,7 +45,7 @@ export default class Calendrier extends Component {
 
         this.toggle = this.toggle.bind(this);
         this.state = {
-            activeTab: '1'
+            activeTab: 0
         };
     }
 
@@ -68,7 +68,6 @@ export default class Calendrier extends Component {
 
         const firstDay = moment([year, month.month - 1, 1]);
 
-        let idx = 1;
         let lines = [];
         let hasDay = false;
         let currentDate = firstDay.clone();
@@ -113,13 +112,12 @@ export default class Calendrier extends Component {
 
     renderTabs() {
         let i = 1;
-        const items = MONTHS.map((item) => {
-            const idx = i++;
+        const items = MONTHS.map((item, idx) => {
             return (
                 <NavItem>
                     <NavLink
-                    className={classnames({ active: this.state.activeTab === idx.toString()})}
-                    onClick={() => { this.toggle(idx.toString()); }}
+                    className={classnames({ active: this.state.activeTab === idx})}
+                    onClick={() => { this.toggle(idx); }}
                     >
                         {item.label}
                     </NavLink>
@@ -133,10 +131,10 @@ export default class Calendrier extends Component {
     renderGrids() {
         const tabs = MONTHS.map((month, idx) => {
             return (
-                <TabPane tabId={(idx + 1).toString()}>
+                <TabPane tabId={idx}>
                     <Row>
                         <Col sm="12">
-                            <h3>[{idx}] {month.label} {YEAR + month.yearOffset}</h3>
+                            <h3>{month.label} {YEAR + month.yearOffset}</h3>
                         </Col>
                     </Row>
                     <Row>
