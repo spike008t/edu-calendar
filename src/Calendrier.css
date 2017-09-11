@@ -1,0 +1,8 @@
+
+.Calendrier .day {
+    background-color: #ccc;
+}
+
+.Calendrier .day.workday {
+    background-color: white;
+}
