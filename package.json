@@ -5,9 +5,11 @@
   "dependencies": {
     "bootstrap": "^4.0.0-alpha.6",
     "moment": "^2.18.1",
+    "moment-business": "^3.0.1",
     "react": "^15.6.1",
     "react-addons-css-transition-group": "^15.6.0",
     "react-addons-transition-group": "^15.6.0",
+    "react-color": "^2.13.8",
     "react-dom": "^15.6.1",
     "react-moment": "^0.6.5",
     "react-scripts": "1.0.13",

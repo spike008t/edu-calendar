@@ -1,15 +1,17 @@
 
 import React, { Component } from 'react';
-import { Nav, NavItem, NavLink, TabContent, TabPane, Row, Col, Table } from 'reactstrap';
+import { Nav, NavItem, NavLink, TabContent, TabPane, Row, Col, Table, Badge } from 'reactstrap';
 
 import classnames from 'classnames';
 import './Calendrier.css';
 
 import moment from 'moment';
+import 'moment/locale/fr';
+import business from 'moment-business';
 
 moment.locale('fr');
 
-const NB_LINES_MAX = 6;
+const IDX_FORMAT = "MMYYYY";
 
 const DAYS = [
     {name: 'Lundi',     char: 'L', workday: true},
@@ -21,43 +23,23 @@ const DAYS = [
     {name: 'Dimanche',  char: 'D', workday: false}
 ];
 
-const MONTHS = [
-    {label: 'Septembre',    month: 9,   yearOffset: 0},
-    {label: 'Octobre',      month: 10,  yearOffset: 0},
-    {label: 'Novembre',     month: 11,  yearOffset: 0},
-    {label: 'Décembre',     month: 12,  yearOffset: 0},
-    {label: 'Janvier',      month: 1,   yearOffset: 1},
-    {label: 'Février',      month: 2,   yearOffset: 1},
-    {label: 'Mars',         month: 3,   yearOffset: 1},
-    {label: 'Avril',        month: 4,   yearOffset: 1},
-    {label: 'Mai',          month: 5,   yearOffset: 1},
-    {label: 'Juin',         month: 6,   yearOffset: 1},
-    {label: 'Juillet',      month: 7,   yearOffset: 1},
-    {label: 'Août',         month: 8,   yearOffset: 1},
-];
+function buildMonthsArray(dateStart, dateEnd) {
+    let ret = [];
+    let curDate = dateStart.clone();
 
-const YEAR = 2017;
-
-export default class Calendrier extends Component {
-
-    constructor(props) {
-        super(props);
-
-        this.toggle = this.toggle.bind(this);
-        this.state = {
-            activeTab: 0
-        };
+    let curMonth = null;
+    let idx = 0;
+    while (dateEnd.diff(curDate) >= 0 && idx < 24) {
+        ret.push(curDate.clone());
+        curDate.add(1, 'month');
+        idx++;
     }
 
-    toggle(tab) {
-        if (this.state.activeTab !== tab) {
-            this.setState({
-                activeTab: tab
-            });
-        }
-    }
+    return ret;
+}
 
-    renderMonthGrid(month, year) {
+class MonthGridHeader extends Component {
+    render() {
         const thead = DAYS.map((day) => {
             return (
                 <td>
@@ -66,42 +48,57 @@ export default class Calendrier extends Component {
             );
         });
 
-        const firstDay = moment([year, month.month - 1, 1]);
+        return (<tr>{thead}</tr>);
+    }
+}
+
+class MonthGrid extends Component {
+    render() {
+        const startDate = moment(this.props.date);
 
         let lines = [];
         let hasDay = false;
-        let currentDate = firstDay.clone();
-        for (let line = 0, length = NB_LINES_MAX; line < length; ++line) {
-            let cols = [];
-            for (let i = 0; i < DAYS.length; ++i) {
-                const day = DAYS[i];
-                let label = ' ';
+        let currentDate = startDate.clone();
 
-                if (hasDay === false) {
-                    if ((firstDay.isoWeekday() - 1) === i) {
-                        hasDay = true;
-                        label = currentDate.format('D');
-                        currentDate.add(1, 'd');
-                    }
-                } else {
-                    if (currentDate.month() === firstDay.month()) {
-                        label = currentDate.format('D');
-                        currentDate.add(1, 'd');    
-                    } else {
-                        break;
-                    }
-                }
+        let cols = [];
 
-                cols.push((<td className={classnames('day', {workday: day.workday})}>{label}</td>));
-            }
-            lines.push((<tr>{cols}</tr>));
+        // Adding offset 
+        for (let i = 0, len = (currentDate.isoWeekday() - 1); i < len; ++i) {
+            cols.push(<td></td>);
         }
+
+        // create days
+        const currentMonth = currentDate.month();
+        while (currentDate.month() === currentMonth) {
+            const idx = currentDate.format("YYYY-MM-DD");
+            let names = [];
+            if (this.props.eleves.date.hasOwnProperty(idx)) {
+                console.log(`Eleves found at ${currentDate.format()} => ${this.props.eleves.date[idx].count}`);
+                // const keys = Object.keys(this.props.eleves.date[idx].data);
+
+                for (const key in this.props.eleves.date[idx].data) {
+                    const eleve = this.props.eleves.date[idx].data[key];
+                    names.push(<div><Badge color="primary">{eleve.name}</Badge><br /></div>);
+                }
+            }
+            cols.push(<td className={classnames('day', {weekday: (!business.isWeekDay(currentDate))})}>{currentDate.format('D')}{names}</td>);
+
+            if (cols.length === 7) {
+                lines.push(<tr>{cols}</tr>);
+                cols = [];
+            }
+
+            currentDate.add('1', 'day');
+        }
+
+        if (cols.length) {
+            lines.push(<tr>{cols}</tr>);
+        }
+
         return (
             <Table>
                 <thead>
-                    <tr>
-                        {thead}
-                    </tr>
+                    <MonthGridHeader />
                 </thead>
                 <tbody>
                     {lines}
@@ -109,56 +106,125 @@ export default class Calendrier extends Component {
             </Table>
         );
     }
+}
 
-    renderTabs() {
-        let i = 1;
-        const items = MONTHS.map((item, idx) => {
-            return (
-                <NavItem>
-                    <NavLink
-                    className={classnames({ active: this.state.activeTab === idx})}
-                    onClick={() => { this.toggle(idx); }}
-                    >
-                        {item.label}
-                    </NavLink>
-                </NavItem>
-            );
-        });
+class MonthTabPane extends Component {
+    render() {
+        console.log(`Render MonthTabPane for ${this.props.date.format()}`);
+        const date = moment(this.props.date);
+        return (
+            <TabPane tabId={this.props.idx}>
+            <Row>
+                <Col sm="12">
+                    <h3>{date.format('MMMM YYYY')}</h3>
+                </Col>
+            </Row>
+            <Row>
+                <MonthGrid 
+                    date={this.props.date}
+                    eleves={this.props.eleves}
+                />
+            </Row>
+        </TabPane>
+        );
+    }
+}
 
-        return items;
+class NavItemMonth extends Component {
+
+    constructor(props) {
+        super(props);
+
+        this.handleClick = this.handleClick.bind(this);
     }
 
-    renderGrids() {
-        const tabs = MONTHS.map((month, idx) => {
-            return (
-                <TabPane tabId={idx}>
-                    <Row>
-                        <Col sm="12">
-                            <h3>{month.label} {YEAR + month.yearOffset}</h3>
-                        </Col>
-                    </Row>
-                    <Row>
-                        {this.renderMonthGrid(month, YEAR + month.yearOffset)}
-                    </Row>
-                </TabPane>
-            );
+    handleClick() {
+        this.props.onClick({
+            idx: this.props.idx,
+            date: this.props.date,
         });
-
-        return (
-            <TabContent activeTab={this.state.activeTab}>
-                {tabs}
-            </TabContent>
-        );
     }
 
     render() {
         return (
+            <NavItem>
+                <NavLink
+                    className={classnames({ active: this.props.active })}
+                    onClick={this.handleClick}
+                >
+                    {this.props.date.format('MMMM')}
+            </NavLink>
+            </NavItem>
+        );
+    }
+}
+
+NavItemMonth.defaultProps = {
+    active: false,
+    onClick: function() {}
+};
+
+class Calendrier extends Component {
+
+    constructor(props) {
+        super(props);
+        
+        const startDate = moment(this.props.dateStart);
+        this.state = {
+            startDate: startDate,
+            activeDate: startDate,
+            activeTab: startDate.format(IDX_FORMAT),
+        };
+
+        this.toggle = this.toggle.bind(this);
+    }
+
+    toggle(tabInfo) {
+        console.log(`Calendrier::toggle`, tabInfo);
+        if (this.state.activeTab !== tabInfo.idx) {
+            this.setState({
+                activeTab: tabInfo.idx,
+                activeDate: tabInfo.date,
+            });
+        }
+    }
+
+    render() {
+        // const data = this.build();
+        const dates = buildMonthsArray(this.props.dateStart, this.props.dateEnd);
+
+        console.log(this.props);
+
+        return (
             <div className="Calendrier">
                 <Nav tabs>
-                    {this.renderTabs()}
+                    {dates.map((item) => {
+                        const idx = item.format(IDX_FORMAT);
+                        return (
+                            <NavItemMonth 
+                                date={item} 
+                                onClick={this.toggle}
+                                idx={idx}
+                                active={this.state.activeTab == idx}
+                            />
+                        );
+                    })}
                 </Nav>
-                {this.renderGrids()}
+                <TabContent activeTab={this.state.activeTab}>
+                    <MonthTabPane 
+                        date={this.state.activeDate}
+                        idx={this.state.activeDate.format(IDX_FORMAT)}
+                        eleves={this.props.eleves}
+                    />
+                </TabContent>
             </div>
         );
     }
 }
+
+Calendrier.defaultProps = {
+    dateStart: moment().month(8).date(1),
+    dateEnd: moment().add(1, 'year').month(7).date(1)
+};
+
+export default Calendrier;
