@@ -1,5 +1,7 @@
 
 import React, { Component } from 'react';
+import reactCSS from 'reactcss';
+
 import { Nav, NavItem, NavLink, TabContent, TabPane, Row, Col, Table, Badge } from 'reactstrap';
 
 import classnames from 'classnames';
@@ -26,8 +28,6 @@ const DAYS = [
 function buildMonthsArray(dateStart, dateEnd) {
     let ret = [];
     let curDate = dateStart.clone();
-
-    let curMonth = null;
     let idx = 0;
     while (dateEnd.diff(curDate) >= 0 && idx < 24) {
         ret.push(curDate.clone());
@@ -40,11 +40,11 @@ function buildMonthsArray(dateStart, dateEnd) {
 
 class MonthGridHeader extends Component {
     render() {
-        const thead = DAYS.map((day) => {
+        const thead = DAYS.map((day, idx) => {
             return (
-                <td>
+                <th key={idx}>
                     {day.char}
-                </td>
+                </th>
             );
         });
 
@@ -53,38 +53,87 @@ class MonthGridHeader extends Component {
 }
 
 class MonthGrid extends Component {
+
     render() {
+        const styles = reactCSS({
+            'default': {
+                weekday: {
+                    background: `rgba(${ this.props.weekdayColor.r }, ${ this.props.weekdayColor.g }, ${ this.props.weekdayColor.b }, ${ this.props.weekdayColor.a })`,
+                },
+                workday: {
+                    background: `rgba(${ this.props.workdayColor.r }, ${ this.props.workdayColor.g }, ${ this.props.workdayColor.b }, ${ this.props.workdayColor.a })`,
+                },
+                noday: {
+                    background: `rgba(${ this.props.nodayColor.r }, ${ this.props.nodayColor.g }, ${ this.props.nodayColor.b }, ${ this.props.nodayColor.a })`,
+                },
+                birthday: {
+                    background: `rgba(${ this.props.birthdayColor.r }, ${ this.props.birthdayColor.g }, ${ this.props.birthdayColor.b }, ${ this.props.birthdayColor.a })`,
+                },
+                offday: {
+                    background: `rgba(${ this.props.offdayColor.r }, ${ this.props.offdayColor.g }, ${ this.props.offdayColor.b }, ${ this.props.offdayColor.a })`,
+                },
+            }
+        });
+    
         const startDate = moment(this.props.date);
 
         let lines = [];
-        let hasDay = false;
         let currentDate = startDate.clone();
 
         let cols = [];
 
         // Adding offset 
         for (let i = 0, len = (currentDate.isoWeekday() - 1); i < len; ++i) {
-            cols.push(<td></td>);
+            cols.push(<td key={"nodayBefore-" + i} style={styles.noday}>&nbsp;</td>);
         }
 
         // create days
         const currentMonth = currentDate.month();
         while (currentDate.month() === currentMonth) {
-            const idx = currentDate.format("YYYY-MM-DD");
+
+            let styleToUse = null;
+
+            const idx = currentDate.format("MM-DD");
             let names = [];
+            let offdayNames = null;
             if (this.props.eleves.date.hasOwnProperty(idx)) {
                 console.log(`Eleves found at ${currentDate.format()} => ${this.props.eleves.date[idx].count}`);
-                // const keys = Object.keys(this.props.eleves.date[idx].data);
 
                 for (const key in this.props.eleves.date[idx].data) {
                     const eleve = this.props.eleves.date[idx].data[key];
-                    names.push(<div><Badge color="primary">{eleve.name}</Badge><br /></div>);
+                    names.push(<div key={eleve.hash}><Badge color="primary">{eleve.name}</Badge><br /></div>);
                 }
+
+                styleToUse = styles.birthday;
+            } 
+
+            // check if offday
+            const dayId = currentDate.format("DD");
+            if (this.props.offdays.hasOwnProperty(dayId)) {
+                if (styleToUse === null) {
+                    styleToUse = styles.offday;
+                }
+                offdayNames = this.props.offdays[dayId].map((label) => {
+                    return (<div><Badge color="warning">{label}</Badge><br /></div>);
+                });
             }
-            cols.push(<td className={classnames('day', {weekday: (!business.isWeekDay(currentDate))})}>{currentDate.format('D')}{names}</td>);
+
+            // adding day
+            if (styleToUse === null) {
+                styleToUse = (business.isWeekDay(currentDate) ? styles.workday : styles.weekday);
+            }
+            cols.push(
+                <td key={currentDate.format("YYYY-MM-DD")} className={classnames('day', {weekday: (!business.isWeekDay(currentDate))})}
+                    style={styleToUse}
+                >
+                    {currentDate.format('D')}
+                    {offdayNames}
+                    {names}
+                </td>
+            );
 
             if (cols.length === 7) {
-                lines.push(<tr>{cols}</tr>);
+                lines.push(<tr key={lines.length}>{cols}</tr>);
                 cols = [];
             }
 
@@ -92,11 +141,16 @@ class MonthGrid extends Component {
         }
 
         if (cols.length) {
-            lines.push(<tr>{cols}</tr>);
+            let i = 0;
+            while (cols.length < 7) {
+                cols.push(<td key={"nodayBefore-" + i} style={styles.noday}>&nbsp;</td>);
+                i++;
+            }
+            lines.push(<tr key={lines.length}>{cols}</tr>);
         }
 
         return (
-            <Table>
+            <Table className="monthGrid">
                 <thead>
                     <MonthGridHeader />
                 </thead>
@@ -123,6 +177,12 @@ class MonthTabPane extends Component {
                 <MonthGrid 
                     date={this.props.date}
                     eleves={this.props.eleves}
+                    offdays={this.props.offdays}
+                    workdayColor={this.props.workdayColor}
+                    weekdayColor={this.props.weekdayColor}
+                    nodayColor={this.props.nodayColor}
+                    birthdayColor={this.props.birthdayColor}
+                    offdayColor={this.props.offdayColor}
                 />
             </Row>
         </TabPane>
@@ -152,7 +212,7 @@ class NavItemMonth extends Component {
                     className={classnames({ active: this.props.active })}
                     onClick={this.handleClick}
                 >
-                    {this.props.date.format('MMMM')}
+                    {this.props.date.format('MMM')}
             </NavLink>
             </NavItem>
         );
@@ -189,11 +249,27 @@ class Calendrier extends Component {
         }
     }
 
+    componentWillReceiveProps(nextProps) {
+        // if (nextProps.dateStart.diff(this.state.startDate)) {
+            this.setState({
+                activeDate: nextProps.dateStart,
+                activeTab: nextProps.dateStart.format(IDX_FORMAT),
+            });
+        // }        
+    }
+
     render() {
         // const data = this.build();
         const dates = buildMonthsArray(this.props.dateStart, this.props.dateEnd);
 
-        console.log(this.props);
+        console.log(`Calendrier::props`, this.props);
+        console.log(`Calendrier::state`, this.state);
+
+        let offdays = {};
+        const offdayId = this.state.activeDate.format('MM');
+        if (this.props.offdays.hasOwnProperty(offdayId)) {
+            offdays = this.props.offdays[offdayId];
+        }
 
         return (
             <div className="Calendrier">
@@ -202,10 +278,11 @@ class Calendrier extends Component {
                         const idx = item.format(IDX_FORMAT);
                         return (
                             <NavItemMonth 
+                                key={idx}
                                 date={item} 
                                 onClick={this.toggle}
                                 idx={idx}
-                                active={this.state.activeTab == idx}
+                                active={this.state.activeTab === idx}
                             />
                         );
                     })}
@@ -215,6 +292,12 @@ class Calendrier extends Component {
                         date={this.state.activeDate}
                         idx={this.state.activeDate.format(IDX_FORMAT)}
                         eleves={this.props.eleves}
+                        offdays={offdays}
+                        workdayColor={this.props.workdayColor}
+                        weekdayColor={this.props.weekdayColor}
+                        nodayColor={this.props.nodayColor}
+                        birthdayColor={this.props.birthdayColor}
+                        offdayColor={this.props.offdayColor}
                     />
                 </TabContent>
             </div>
@@ -224,7 +307,11 @@ class Calendrier extends Component {
 
 Calendrier.defaultProps = {
     dateStart: moment().month(8).date(1),
-    dateEnd: moment().add(1, 'year').month(7).date(1)
+    dateEnd: moment().add(1, 'year').month(7).date(1),
+    workdayColor: {r: 255, g: 255, b: 255, a: 1},
+    weekdayColor: {r: 150, g: 150, b: 150, a: 1},
+    nodayColor: {r: 50, g: 50, b: 50, a: 1},
+    offdays: {}
 };
 
 export default Calendrier;

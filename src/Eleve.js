@@ -1,13 +1,14 @@
 
 import React, { Component } from 'react';
+
+import moment from 'moment';
+import 'moment/locale/fr';
+
 import { 
     Form, 
     FormGroup, 
-    FormRow,
     Label, 
     Input, 
-    Row, 
-    Col, 
     Button 
 } from 'reactstrap';
 
@@ -20,6 +21,7 @@ export default class Eleve extends Component {
             hash: null,
         };
         this.notifyChange = this.notifyChange.bind(this);
+        this.handleClickDelete = this.handleClickDelete.bind(this);
     }
 
     handleNameChange(e) {
@@ -37,18 +39,28 @@ export default class Eleve extends Component {
             return ;
         }
         this.setState({
-            date: e.target.value,
+            date: moment(e.target.value),
             hash: e.target.value + this.state.name,
         }, this.notifyChange);
     }
 
     notifyChange() {
         if (this.state.name && this.state.date) {
+            console.log(moment(this.state.date));
             this.props.onChange({
                 id: this.props.id,
                 data: this.state,
             });
         }
+    }
+
+    handleClickDelete(e) {
+        e.preventDefault();
+        console.log(`DELETE`, this.state);
+        this.props.onDelete({
+            id: this.props.id,
+            data: this.state,
+        });
     }
 
     render() {
@@ -62,8 +74,14 @@ export default class Eleve extends Component {
                     <Label for={this.props.id + '-date'} hidden>Date</Label>
                     <Input onBlur={this.handleDateChange.bind(this)} type='date' name={this.props.id + '-date'} placeholder='Date de naissance' />
                 </FormGroup>
-                    {/* <Button>X</Button> */}
+                <Button onClick={this.handleClickDelete}>X</Button>
             </Form>
         );
     }   
 }
+
+Eleve.defaultProps = {
+    onChange: function() {},
+    onDelete: function() {},
+    canDelete: true,
+};

@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import { Col, Form, FormGroup, Label, Input } from 'reactstrap';
+import { Col, Form, FormGroup, Label, Input, Collapse, Button, CardBlock, Card } from 'reactstrap';
 import { SketchPicker } from 'react-color';
 import reactCSS from 'reactcss';
 
@@ -14,7 +14,7 @@ class ParameterDateForm extends Component {
         let options = [];
     
         for (let i = 0; i < 3; ++i) {
-          options.push(<option value={yearNow + i}>{yearNow + i}-{yearNext + i}</option>);
+          options.push(<option key={yearNow + i} value={yearNow + i}>{yearNow + i}-{yearNext + i}</option>);
         }
 
         return (
@@ -34,16 +34,20 @@ ParameterDateForm.defaultProps = {
     onChange: function() {}
 };
 
-class WeekdayColorForm extends Component {
+class InputColorForm extends Component {
 
-    state = {
-        displayColorPicker: false,
-        color: {
-            r: '150',
-            g: '150',
-            b: '150',
-            a: '1'
-        },
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            displayColorPicker: false,
+            color: {
+                r: this.props.r,
+                g: this.props.g,
+                b: this.props.b,
+                a: this.props.a,
+            },
+        }
     }
 
     handleClick = () => {
@@ -59,9 +63,12 @@ class WeekdayColorForm extends Component {
     }
 
     handleChange = (color) => {
+        console.log(`InputColorForm::handleChange`, color);
         this.setState({
             color: color.rgb,
         });
+        // notify color changed
+        this.props.onChange(color);
     }
 
     render() {
@@ -97,7 +104,7 @@ class WeekdayColorForm extends Component {
             
         return (
             <FormGroup row>
-                <Label sm={6} for="weekdayColor">Couleur weekend</Label>
+                <Label sm={6}>{this.props.label}</Label>
                 <Col sm={6}>
                     <div style={styles.swatch}  onClick={this.handleClick}>
                         <div style={ styles.color }  />
@@ -111,16 +118,107 @@ class WeekdayColorForm extends Component {
     }
 }
 
+InputColorForm.defaultProps = {
+    onChange: function() {},
+    label: 'Color',
+    r: '255',
+    g: '255',
+    b: '255',
+    a: '1'
+};
+
+class ColorsForm extends Component {
+
+    constructor(props) {
+        super(props);
+
+        this.handleWorkdayColorChange = this.handleWorkdayColorChange.bind(this);
+        this.handleWeekdayColorChange = this.handleWeekdayColorChange.bind(this);
+        this.handleNodayColorChange = this.handleNodayColorChange.bind(this);
+        this.handleBirthdayColorChange = this.handleBirthdayColorChange.bind(this);
+        this.handleOffdayColorChange = this.handleOffdayColorChange.bind(this);
+    }
+
+    handleWorkdayColorChange(color) {
+        this.props.onWorkdayColorChange(color.rgb);
+    }
+
+    handleWeekdayColorChange(color) {
+        this.props.onWeekdayColorChange(color.rgb);
+    }
+
+    handleNodayColorChange(color) {
+        this.props.onNodayColorChange(color.rgb);
+    }
+
+    handleBirthdayColorChange(color) {
+        this.props.onBirthdayColorChange(color.rgb);
+    }
+
+    handleOffdayColorChange(color) {
+        this.props.onOffdayColorChange(color.rgb);
+    }
+
+    render() {
+        return (
+            <div>
+                <InputColorForm 
+                    label="Jour normal" 
+                    r={this.props.workdayColor.r}
+                    g={this.props.workdayColor.g}
+                    b={this.props.workdayColor.b}
+                    a={this.props.workdayColor.a}
+                    onChange={this.handleWorkdayColorChange}
+                />
+                <InputColorForm 
+                    label="Weekend" 
+                    r={this.props.weekdayColor.r}
+                    g={this.props.weekdayColor.g}
+                    b={this.props.weekdayColor.b}
+                    a={this.props.weekdayColor.a}
+                    onChange={this.handleWeekdayColorChange}
+                />
+                <InputColorForm 
+                    label="Couleur pas de jour" 
+                    r={this.props.nodayColor.r}
+                    g={this.props.nodayColor.g}
+                    b={this.props.nodayColor.b}
+                    a={this.props.nodayColor.a}
+                    onChange={this.handleNodayColorChange}
+                />
+                <InputColorForm 
+                    label="Jour férié" 
+                    r={this.props.offdayColor.r}
+                    g={this.props.offdayColor.g}
+                    b={this.props.offdayColor.b}
+                    a={this.props.offdayColor.a}
+                    onChange={this.handleOffdayColorChange}
+                />
+                <InputColorForm 
+                    label="Anniversaire" 
+                    r={this.props.birthdayColor.r}
+                    g={this.props.birthdayColor.g}
+                    b={this.props.birthdayColor.b}
+                    a={this.props.birthdayColor.a}
+                    onChange={this.handleBirthdayColorChange}
+                />
+            </div>
+        );
+    }
+}
+
 class ParameterForm extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            year: moment().year()
+            year: moment().year(),
+            collapseColor: false,
         };
 
         this.notifyChange = this.notifyChange.bind(this);
         this.onDateChange = this.onDateChange.bind(this);
+        this.toggleColor = this.toggleColor.bind(this);
     }
 
     onDateChange(e) {
@@ -133,13 +231,38 @@ class ParameterForm extends Component {
         this.props.onChange(this.state);
     }
 
+    toggleColor() {
+        this.setState({
+            collapseColor: !this.state.collapseColor
+        });
+    }
+
     render() {
         return (
             <div className="parameter">
                 <h3>Paramètres</h3>
                 <Form>
                     <ParameterDateForm onChange={this.onDateChange} />
-                    <WeekdayColorForm />
+
+                    <Button color="primary" onClick={this.toggleColor} style={{ marginBottom: '1rem' }}>Couleurs</Button>
+                    <Collapse isOpen={this.state.collapseColor}>
+                        <Card>
+                            <CardBlock>
+                                <ColorsForm 
+                                    workdayColor={this.props.workdayColor}
+                                    weekdayColor={this.props.weekdayColor}
+                                    nodayColor={this.props.nodayColor}
+                                    offdayColor={this.props.offdayColor}
+                                    birthdayColor={this.props.birthdayColor}
+                                    onWorkdayColorChange={this.props.onWorkdayColorChange}
+                                    onWeekdayColorChange={this.props.onWeekdayColorChange}
+                                    onNodayColorChange={this.props.onNodayColorChange}
+                                    onBirthdayColorChange={this.props.onBirthdayColorChange}
+                                    onOffdayColorChange={this.props.onOffdayColorChange}
+                                />
+                            </CardBlock>
+                        </Card>
+                    </Collapse>
                 </Form>
             </div>
         );
@@ -147,7 +270,12 @@ class ParameterForm extends Component {
 }
 
 ParameterForm.defaultProps = {
-    onChange: function() {}
+    onChange: function() {},
+    onWorkdayColorChange: function() {},
+    onWeekdayColorChange: function() {},
+    onNodayColorChange: function() {},
+    onBirthdayColorChange: function() {},
+    onOffdayColorChange: function() {},
 };
 
 export default ParameterForm;

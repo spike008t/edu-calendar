@@ -1,9 +1,18 @@
 
 .Calendrier .day {
-    background-color: white;
+    /* background-color: white; */
     height: 8rem;
 }
 
-.Calendrier .day.weekday {
+/* .Calendrier .day.weekday {
     background-color: #ccc;
+} */
+
+.Calendrier .monthGrid th {
+    width: 14%;
+    text-align: center;
+}
+
+.Calendrier .monthGrid td.day {
+    border: 1px solid black;
 }
