@@ -1,5 +1,5 @@
 
-.Calendrier .day {
+.Calendar .day {
     /* background-color: white; */
     height: 8rem;
 }
@@ -8,11 +8,11 @@
     background-color: #ccc;
 } */
 
-.Calendrier .monthGrid th {
+.Calendar .monthGrid th {
     width: 14%;
     text-align: center;
 }
 
-.Calendrier .monthGrid td.day {
+.Calendar .monthGrid td.day {
     border: 1px solid black;
 }

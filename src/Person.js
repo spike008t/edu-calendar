@@ -12,7 +12,7 @@ import {
     Button 
 } from 'reactstrap';
 
-export default class Eleve extends Component {
+class Person extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -80,8 +80,10 @@ export default class Eleve extends Component {
     }   
 }
 
-Eleve.defaultProps = {
+Person.defaultProps = {
     onChange: function() {},
     onDelete: function() {},
     canDelete: true,
 };
+
+export default Person;

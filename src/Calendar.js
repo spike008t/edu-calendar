@@ -5,7 +5,7 @@ import reactCSS from 'reactcss';
 import { Nav, NavItem, NavLink, TabContent, TabPane, Row, Col, Table, Badge } from 'reactstrap';
 
 import classnames from 'classnames';
-import './Calendrier.css';
+import './Calendar.css';
 
 import moment from 'moment';
 import 'moment/locale/fr';
@@ -96,12 +96,12 @@ class MonthGrid extends Component {
             const idx = currentDate.format("MM-DD");
             let names = [];
             let offdayNames = null;
-            if (this.props.eleves.date.hasOwnProperty(idx)) {
-                console.log(`Eleves found at ${currentDate.format()} => ${this.props.eleves.date[idx].count}`);
+            if (this.props.persons.date.hasOwnProperty(idx)) {
+                console.log(`Persons found at ${currentDate.format()} => ${this.props.persons.date[idx].count}`);
 
-                for (const key in this.props.eleves.date[idx].data) {
-                    const eleve = this.props.eleves.date[idx].data[key];
-                    names.push(<div key={eleve.hash}><Badge color="primary">{eleve.name}</Badge><br /></div>);
+                for (const key in this.props.persons.date[idx].data) {
+                    const person = this.props.persons.date[idx].data[key];
+                    names.push(<div key={person.hash}><Badge color="primary">{person.name}</Badge><br /></div>);
                 }
 
                 styleToUse = styles.birthday;
@@ -176,7 +176,7 @@ class MonthTabPane extends Component {
             <Row>
                 <MonthGrid 
                     date={this.props.date}
-                    eleves={this.props.eleves}
+                    persons={this.props.persons}
                     offdays={this.props.offdays}
                     workdayColor={this.props.workdayColor}
                     weekdayColor={this.props.weekdayColor}
@@ -224,7 +224,7 @@ NavItemMonth.defaultProps = {
     onClick: function() {}
 };
 
-class Calendrier extends Component {
+class Calendar extends Component {
 
     constructor(props) {
         super(props);
@@ -240,7 +240,6 @@ class Calendrier extends Component {
     }
 
     toggle(tabInfo) {
-        console.log(`Calendrier::toggle`, tabInfo);
         if (this.state.activeTab !== tabInfo.idx) {
             this.setState({
                 activeTab: tabInfo.idx,
@@ -262,8 +261,8 @@ class Calendrier extends Component {
         // const data = this.build();
         const dates = buildMonthsArray(this.props.dateStart, this.props.dateEnd);
 
-        console.log(`Calendrier::props`, this.props);
-        console.log(`Calendrier::state`, this.state);
+        console.log(`Calendar::props`, this.props);
+        console.log(`Calendar::state`, this.state);
 
         let offdays = {};
         const offdayId = this.state.activeDate.format('MM');
@@ -272,7 +271,7 @@ class Calendrier extends Component {
         }
 
         return (
-            <div className="Calendrier">
+            <div className="Calendar">
                 <Nav tabs>
                     {dates.map((item) => {
                         const idx = item.format(IDX_FORMAT);
@@ -291,7 +290,7 @@ class Calendrier extends Component {
                     <MonthTabPane 
                         date={this.state.activeDate}
                         idx={this.state.activeDate.format(IDX_FORMAT)}
-                        eleves={this.props.eleves}
+                        persons={this.props.persons}
                         offdays={offdays}
                         workdayColor={this.props.workdayColor}
                         weekdayColor={this.props.weekdayColor}
@@ -305,7 +304,7 @@ class Calendrier extends Component {
     }
 }
 
-Calendrier.defaultProps = {
+Calendar.defaultProps = {
     dateStart: moment().month(8).date(1),
     dateEnd: moment().add(1, 'year').month(7).date(1),
     workdayColor: {r: 255, g: 255, b: 255, a: 1},
@@ -314,4 +313,4 @@ Calendrier.defaultProps = {
     offdays: {}
 };
 
-export default Calendrier;
+export default Calendar;

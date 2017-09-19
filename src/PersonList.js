@@ -2,63 +2,64 @@
 import React, { Component } from 'react';
 import { Row, Button, Col } from 'reactstrap';
 
-import Eleve from './Eleve';
+import Person from './Person';
 
-class EleveList extends Component {
+const KEY_PREFIX = 'person';
+
+class PersonList extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            inputs: ['eleve0'],
+            inputs: [`${KEY_PREFIX}0`],
             idx: 1,
         };
 
-        this.handleEleveChange = this.handleEleveChange.bind(this);
-        this.appendEleveInput = this.appendEleveInput.bind(this);
-        this.handleEleveDelete = this.handleEleveDelete.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.appendInput = this.appendInput.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
     }
 
-    appendEleveInput() {
-        const newInput = `eleve${this.state.idx}`;
+    appendInput() {
+        const newInput = `${KEY_PREFIX}${this.state.idx}`;
         this.setState({
             inputs: this.state.inputs.concat(newInput),
             idx: this.state.idx + 1
         });
     }
 
-    handleEleveChange(eleve) {
-        console.log(eleve);
+    handleChange(person) {
+        console.log(person);
         this.props.onChange({
-            id: eleve.id,
-            data: eleve.data
+            id: person.id,
+            data: person.data
         });    
     }
 
-    handleEleveDelete(eleve) {
-        console.log(`DELETE`, eleve);
+    handleDelete(person) {
         this.setState({
             inputs: this.state.inputs.filter((item) => {
-                return item !== eleve.id;
+                return item !== person.id;
             })
         });
         this.props.onDelete({
-            id: eleve.id,
-            data: eleve.data,
+            id: person.id,
+            data: person.data,
         });
     }
 
     render() {
         return (
-            <div className="EleveList">
-                <Row className="EleveList--list">
+            <div className="PersonList">
+                <Row className="PersonList--list">
                     <Col>
                         {this.state.inputs.map((item, idx) => {
                             return (
-                                <Eleve 
+                                <Person
                                     key={idx}
                                     id={item} 
                                     idx={idx} 
-                                    onChange={this.handleEleveChange} 
-                                    onDelete={this.handleEleveDelete}
+                                    onChange={this.handleChange} 
+                                    onDelete={this.handleDelete}
                                     canDelete={idx !== 0}
                                 />
                             );
@@ -67,7 +68,7 @@ class EleveList extends Component {
                 </Row>
                 <Row>
                     <Col>
-                        <Button onClick={this.appendEleveInput}>Ajouter un eleve</Button>
+                        <Button onClick={this.appendInput}>Ajouter un eleve</Button>
                     </Col>
                 </Row>
             </div>
@@ -75,9 +76,9 @@ class EleveList extends Component {
     }
 }
 
-EleveList.defaultProps = {
+PersonList.defaultProps = {
     onChange: function() {},
     onDelete: function() {},
 };
 
-export default EleveList;
+export default PersonList;

@@ -5,8 +5,8 @@ import { Container, Row, Col } from 'reactstrap';
 import moment from 'moment';
 import 'moment/locale/fr';
 
-import Calendrier from './Calendrier';
-import EleveList from './EleveList';
+import Calendar from './Calendar';
+import PersonList from './PersonList';
 import ParameterForm from './ParameterForm';
 
 // import logo from './logo.svg';
@@ -19,7 +19,7 @@ class App extends Component {
       start: moment([2017, 8, 1]),
       end: moment([2018, 6, 31]),
     },
-    eleves: {
+    persons: {
       data: {},
       date: {}
     },
@@ -80,8 +80,8 @@ class App extends Component {
     super(props);
 
     this.handleParametersChange = this.handleParametersChange.bind(this);
-    this.handleEleveChange = this.handleEleveChange.bind(this);
-    this.handleEleveDelete = this.handleEleveDelete.bind(this);
+    this.handlePersonChange = this.handlePersonChange.bind(this);
+    this.handlePersonDelete = this.handlePersonDelete.bind(this);
 
     this.handleWeekdayColorChange = this.handleColorChange.bind(this, 'weekdayColor');
     this.handleWorkdayColorChange = this.handleColorChange.bind(this, 'workdayColor');
@@ -90,74 +90,74 @@ class App extends Component {
     this.handleOffdayColorChange = this.handleColorChange.bind(this, 'offdayColor');
   }
 
-  handleEleveChange(eleve) {
-    console.log(`App::onEleveChange`, eleve);
+  handlePersonChange(person) {
+    console.log(`App::onPersonChange`, person);
 
-    const eleves = this.state.eleves;
-    const id = eleve.id;
-    const data = eleve.data;
-    const exists = eleves.data.hasOwnProperty(id);
+    const persons = this.state.persons;
+    const id = person.id;
+    const data = person.data;
+    const exists = persons.data.hasOwnProperty(id);
 
-    if (exists === false || eleves.data[id].hash !== data.hash) {
+    if (exists === false || persons.data[id].hash !== data.hash) {
 
       this.setState((prevState) => {
 
-        let eleves = prevState.eleves;
+        let persons = prevState.persons;
 
         if (exists === true) {
-          const oldData = eleves.data[id];
+          const oldData = persons.data[id];
           // if different -> delete name
           if (oldData.date.diff(data.date) === 0 ) {
             const oldDateId = oldData.date.format("MM-DD");
-            delete eleves.date[oldDateId].data[id];
-            eleves.date[oldDateId].count--;
-            if (eleves.date[oldDateId].count === 0) {
-              delete eleves.date[oldDateId];
+            delete persons.date[oldDateId].data[id];
+            persons.date[oldDateId].count--;
+            if (persons.date[oldDateId].count === 0) {
+              delete persons.date[oldDateId];
             }
           }
         }
   
-        eleves.data[id] = data;
+        persons.data[id] = data;
   
         const dateId = data.date.format("MM-DD");
-        if (eleves.date.hasOwnProperty(dateId) === false) {
-          eleves.date[dateId] = {
+        if (persons.date.hasOwnProperty(dateId) === false) {
+          persons.date[dateId] = {
             count: 1,
             data: {}
           };
         }
-        eleves.date[dateId].data[id] = data;      
+        persons.date[dateId].data[id] = data;      
 
         return {
-          eleves: eleves
+          persons: persons
         };
       });
     }
   }
 
-  handleEleveDelete(eleve) {
-    console.log(`App:handleEleveDelete`, eleve);
-    const id = eleve.id;
-    const eleves = this.state.eleves;
+  handlePersonDelete(person) {
+    console.log(`App:handlePersonDelete`, person);
+    const id = person.id;
+    const persons = this.state.persons;
 
-    const exists = eleves.data.hasOwnProperty(id);
+    const exists = persons.data.hasOwnProperty(id);
     if (exists === false) {
       return ;
     }
 
     this.setState((state) => {
-      let eleves = state.eleves;
-      const oldData = eleves.data[id];
+      let persons = state.persons;
+      const oldData = persons.data[id];
       const oldDateId = oldData.date.format("MM-DD");
-      delete eleves.date[oldDateId].data[id];
-      eleves.date[oldDateId].count--;
-      if (eleves.date[oldDateId].count === 0) {
-        delete eleves.date[oldDateId];
+      delete persons.date[oldDateId].data[id];
+      persons.date[oldDateId].count--;
+      if (persons.date[oldDateId].count === 0) {
+        delete persons.date[oldDateId];
       }
 
-      delete eleves.data[id];
+      delete persons.data[id];
       return {
-        eleves: eleves
+        persons: persons
       };
     });
 
@@ -209,15 +209,15 @@ class App extends Component {
                 onOffdayColorChange={this.handleOffdayColorChange}
               />
               <h3>Liste des élèves</h3>
-              <EleveList
-                onChange={this.handleEleveChange}
-                onDelete={this.handleEleveDelete}
+              <PersonList
+                onChange={this.handlePersonChange}
+                onDelete={this.handlePersonDelete}
               />
             </Col>
             <Col sm="8" md="8">
               <h3>Calendrier</h3>
-              <Calendrier 
-                eleves={this.state.eleves}
+              <Calendar 
+                persons={this.state.persons}
                 offdays={this.state.offdays}
                 dateStart={this.state.date.start}
                 dateEnd={this.state.date.end}

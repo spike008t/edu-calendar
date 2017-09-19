@@ -12,6 +12,7 @@
     "react-color": "^2.13.8",
     "react-dom": "^15.6.1",
     "react-moment": "^0.6.5",
+    "react-router": "^4.2.0",
     "react-scripts": "1.0.13",
     "reactstrap": "^4.8.0"
   },
